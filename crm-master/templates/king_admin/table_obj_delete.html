@@ -1,0 +1,27 @@
+{%  extends 'king_admin/table_index.html' %}
+{% load tags %}
+
+
+
+{% block container %}
+
+    {% display_obj_related objs  %}
+{#    这个objs应该传queryset类型的！！！#}
+    {% for k,v in errors.items %}
+        <ul style="color: red">
+            <li>{{ k }}</li>
+            <li>{{ v }}</li>
+        </ul>
+    {% endfor %}
+
+    <form method="post">{% csrf_token %}
+        <input type="submit" class="btn btn-danger" value="Yes,I'm sure">
+        <input type="hidden" value="yes" name="delete_confirm">
+{#   通过判断它delete_confirm = yes，来确定是否是最后删除的post#}
+        <input type="hidden" value="{{ selected_ids }}" name="selected_ids">
+        <input type="hidden" value="{{ action }}" name="action">
+{#   将第一次post过来时候，request里面的action赋值给这个input框#}
+        <a class="btn btn-info" href="{% url 'table_objs' app_name table_name  %}">No,Take me back</a>
+    </form>
+
+{% endblock %}

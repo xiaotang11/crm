@@ -1,0 +1,154 @@
+{% extends 'king_admin/table_index.html' %}
+{% load tags %}
+{#加载自定义标签#}
+
+{% block container %}
+{#    {{ admin_class.list_display }}#}
+    <div class="panel panel-info">
+          <div class="panel-heading">
+            <h3 class="panel-title">{% get_model_name admin_class %}
+{#                显示表名#}
+                <a href="{{ request.path }}add/" class="pull-right">Add</a>
+{#                通过request.path拼接路径，跳转到增加页面#}
+            </h3>
+
+          </div>
+          <div class="panel-body">
+           <div class="row">
+               <form class="" method="get">
+{#                    此表单用于过滤字段、模糊搜索#}
+                    {% for filter_field in admin_class.list_filter %}
+                    <div class="col-lg-2">
+                        <span>{{ filter_field }}</span>
+                        {% render_filter_ele filter_field admin_class filter_condtions%}
+        {#                        构造过滤字段的下拉框选项，构造为如下形式#}
+        {#                        <select  class="form-control" name='{filter_field}' >#}
+        {#                            <option value=''>--------</option>#}
+        {#                        </select>#}
+                    </div>
+                    {% endfor %}
+                      <button type="SUBMIT" class="btn btn-success">过滤</button>
+                        <hr>
+                      <div class="row">
+                          <div class="col-lg-2"　>
+                            <input type="search" name="_q" class="form-control" style="margin-left:15px" value="{{ search_text }}" placeholder="search by {% for search_field in admin_class.search_fields %}{{ search_field }},{% endfor %}">
+                          </div>
+                          <div class="col-lg-2"　>
+                            <button type="SUBMIT" class="btn btn-success">搜索</button>
+    {#                          在过滤的基础上搜索，这个按钮也是提交整个表单#}
+                          </div>
+                      </div>
+               </form>
+           </div>
+
+            <div class="row" style="margin-top: 10px">
+                <form onsubmit="return ActionSubmit(this)" method="POST">{% csrf_token %}
+{#                此表单用于提交action批量操作的动作，以及选中的input框的id#}
+                      <div class="col-lg-2">
+                          <select id="action_list" name="action" class="form-control" style="margin-left:15px">
+    {#           只展示批量操作的action名字#}
+                              <option value="">---------</option>
+                              {% for action in admin_class.actions %}
+                                <option value="{{ action }}">{% get_action_verbose_name admin_class action %}</option>
+                              {% endfor %}
+                          </select>
+                      </div>
+                      <div class="col-lg-1"　>
+                        <button type="submit" class="btn  " >Go</button>
+                      </div>
+                </form>
+            </div>
+
+              <table class="table table-hover">
+{#              此表用于显示list_display里面的字段#}
+                  <thead>
+                    <tr>
+                    <th style="width: 35px"><input type="checkbox" onclick="CheckAllToggle(this)" ></th>
+                        {% for column in admin_class.list_display %}
+                            {% build_table_header_column column orderby_key filter_condtions admin_class%}
+{#                            表头显示list_display里面要求显示的字段，同时增加排序字段，一点升序、再点降序#}
+{#                            形如<th><a href="?{filters}&o={orderby_key}">{column}</a> {sort_icon} </th>#}
+{#                            <th>{{ column }}</th>#}
+                        {% endfor %}
+                    </tr>
+                  </thead>
+                  <tfoot>
+
+                    <tr>
+                        <td></td>
+                        <th>总计{{ query_sets.paginator.count }}条</th></tr>
+                  </tfoot>
+                  <tbody>
+{#                    {% get_query_sets  admin_class as query_sets %}#}
+                    {% for obj in query_sets %}
+                    <tr>
+                        <td ><input tag="obj_checkbox" type="checkbox" value="{{ obj.id }}"></td>
+                        {% build_table_row request obj admin_class %}
+{#                        调用自定义标签里面的build_table_row函数，传入三个参数，将要显示的字段名和其内容对应上#}
+{#                        同时，显示的表中点击每一行的id字段的值就可以跳转到相应的信息修改页面#}
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+
+              </table>
+
+          <nav>
+              <ul class="pagination">
+                  {% if query_sets.has_previous %}
+                        <li class=""><a href="?page={{ query_sets.previous_page_number }}">上页</a></li>
+                  {% endif %}
+
+
+                  {% build_paginators query_sets filter_condtions search_text orderby_key%}
+{#!!筛选以后怎么将下一页的a标签改变#}
+                  {% if query_sets.has_next %}
+                        <li class=""><a href="?page={{ query_sets.next_page_number }}">下页</a></li>
+                  {% endif %}
+
+              </ul>
+          </nav>
+
+          </div>
+    </div>
+    <script>
+{# 全选#}
+        function CheckAllToggle(ele) {
+            if(  $(ele).prop("checked")){
+                $("input[tag='obj_checkbox']").prop("checked",true);
+            }else{
+                $("input[tag='obj_checkbox']").prop("checked",false);
+            }
+
+        }
+{#提交 #}
+       function ActionSubmit(form_ele) {
+{#  将所有选中的标签对应的内容删除#}
+           var selected_ids = [];
+           $("input[tag='obj_checkbox']:checked").each(function () {
+{#   $("input[tag='obj_checkbox']:checked")找到所有选中的框#}
+               selected_ids.push($(this).val());
+           })
+           var selected_action = $("#action_list").val();
+{#           selected_ids  拿到选中的id#}
+{#           selected_action  拿到选中的动作名称#}
+           if (selected_ids.length == 0){
+               alert("请选择id！");
+               return
+           }
+           if (!selected_action ){
+               alert("请选择动作!");
+           }
+
+           //start submit，提交
+            var selected_ids_ele = "<input  name='selected_ids' type='hidden' value='" + selected_ids.toString() + "' >"
+            $(form_ele).append(selected_ids_ele);
+
+           return true;
+       }
+    </script>
+
+{% endblock %}
+
+
+
+
