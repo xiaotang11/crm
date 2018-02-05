@@ -24,6 +24,9 @@ username: mary@qq.com password: abc123123
 
 注：此项目以前开发的，必然还有很多bug,希望大家提各种建议。
 
-![](https://github.com/xiaotang11/crm/blob/master/11.PNG) 
+![](https://github.com/xiaotang11/crm/blob/master/33.PNG) 
+![](https://github.com/xiaotang11/crm/blob/master/11.PNG)
+![](https://github.com/xiaotang11/crm/blob/master/22.PNG)
+![](https://github.com/xiaotang11/crm/blob/master/44.PNG)
 
 
